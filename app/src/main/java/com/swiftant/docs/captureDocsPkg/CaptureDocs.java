@@ -3,19 +3,16 @@ package com.swiftant.docs.captureDocsPkg;
 import static android.content.ContentValues.TAG;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
@@ -33,12 +30,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
-import com.swiftant.docs.GalleryActivity;
+import com.swiftant.docs.gallery.GalleryActivity;
 import com.swiftant.docs.R;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -47,13 +42,11 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Callback {
-    private final int REQUEST_CODE_PERMISSIONS = 1001;
     private static final int PERMISSIONS_REQUEST = 99;
     private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
     private static final String PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-    private static final String PERMISSION_READSTORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
+    private static final String PERMISSION_READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
     private static final String PERMISSION_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
-    private SurfaceView surfaceView;
     Camera camera;
     CardView captureImgBtn;
     TextView imageCountView;
@@ -70,36 +63,47 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
 
         Objects.requireNonNull(getSupportActionBar()).hide();
 
-        if (hasPermission()) {
-            FILE_SAVE_LOCATION = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-
-            captureImgBtn = findViewById(R.id.captureBtn);
-            imageCountView = findViewById(R.id.countView);
-            imagePreviewLayout = findViewById(R.id.capturedImageLayout);
-            checkImagePreviewLayoutVisibility();
-            imagePreviewView = findViewById(R.id.capturedImageView);
-
-            imagePreviewLayout.setVisibility(View.GONE);
-
-            surfaceView = findViewById(R.id.previewView);
-            SurfaceHolder surfaceHolder = surfaceView.getHolder();
-            surfaceHolder.addCallback(this);
-            captureImgBtn.setOnClickListener(onClickCapture -> {
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
-                    return;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-                runOnUiThread(this::captureImage);
-            });
-
-            imagePreviewLayout.setOnClickListener(OnClickImagePreview-> {
-                startActivity(new Intent(this, GalleryActivity.class));
-            });
-        } else {
-            requestPermission();
-        }
+        FILE_SAVE_LOCATION = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        init();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkImagePreviewLayoutVisibility();
+    }
+
+    void init() {
+        try {
+            if (hasPermission()) {
+                captureImgBtn = findViewById(R.id.captureBtn);
+                imageCountView = findViewById(R.id.countView);
+                imagePreviewLayout = findViewById(R.id.capturedImageLayout);
+                imagePreviewView = findViewById(R.id.capturedImageView);
+                SurfaceView surfaceView = findViewById(R.id.previewView);
+
+                checkImagePreviewLayoutVisibility();
+                imagePreviewLayout.setVisibility(View.GONE);
+
+                SurfaceHolder surfaceHolder = surfaceView.getHolder();
+                surfaceHolder.addCallback(this);
+
+                captureImgBtn.setOnClickListener(onClickCapture -> {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
+                        return;
+                    }
+                    mLastClickTime = SystemClock.elapsedRealtime();
+                    runOnUiThread(this::captureImage);
+                });
+
+                imagePreviewLayout.setOnClickListener(OnClickImagePreview -> startActivity(new Intent(this, GalleryActivity.class)));
+            } else {
+                requestPermission();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
     private void captureImage() {
@@ -136,9 +140,9 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
             imagePreviewLayout.setVisibility(View.VISIBLE);
             imageCountView.setText(String.valueOf(getFileCountInDirectory(FILE_SAVE_LOCATION)));
             imagePreviewView.setImageBitmap(createBitmapFromFile(getMostRecentFile(FILE_SAVE_LOCATION)));
-            if(getFileCountInDirectory(FILE_SAVE_LOCATION)>0){
+            if (getFileCountInDirectory(FILE_SAVE_LOCATION) > 0) {
                 imagePreviewLayout.setVisibility(View.VISIBLE);
-            }else {
+            } else {
                 imagePreviewLayout.setVisibility(View.GONE);
             }
         } else {
@@ -194,27 +198,11 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
     }
 
     private boolean hasPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED));
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_STORAGE) == PackageManager.PERMISSION_GRANTED));
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_READSTORAGE) == PackageManager.PERMISSION_GRANTED));
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_LOCATION) == PackageManager.PERMISSION_GRANTED));
-            return checkSelfPermission(PERMISSION_CAMERA) ==
-                    PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_LOCATION) ==
-                    PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_STORAGE) ==
-                    PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_READSTORAGE) ==
-                    PackageManager.PERMISSION_GRANTED;
-        } else {
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED));
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_STORAGE) == PackageManager.PERMISSION_GRANTED));
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_READSTORAGE) == PackageManager.PERMISSION_GRANTED));
-            Log.i(null, String.valueOf(checkSelfPermission(PERMISSION_LOCATION) == PackageManager.PERMISSION_GRANTED));
-            return checkSelfPermission(PERMISSION_CAMERA) ==
-                    PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_LOCATION) ==
-                    PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_STORAGE) ==
-                    PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_READSTORAGE) ==
-                    PackageManager.PERMISSION_GRANTED;
-        }
+        return checkSelfPermission(PERMISSION_CAMERA) ==
+                PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED && checkSelfPermission(PERMISSION_READ_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED;
     }
 
 
@@ -222,16 +210,16 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
         try {
             if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA) ||
                     shouldShowRequestPermissionRationale(PERMISSION_STORAGE) ||
-                    shouldShowRequestPermissionRationale(PERMISSION_READSTORAGE) ||
+                    shouldShowRequestPermissionRationale(PERMISSION_READ_STORAGE) ||
                     shouldShowRequestPermissionRationale(PERMISSION_LOCATION) ||
                     shouldShowRequestPermissionRationale(PERMISSION_CAMERA)) {
                 Toast.makeText(this, "Camera, Location and storage permissions are required", Toast.LENGTH_LONG).show();
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                requestPermissions(new String[]{PERMISSION_LOCATION, PERMISSION_CAMERA, PERMISSION_STORAGE, PERMISSION_READSTORAGE}, PERMISSIONS_REQUEST);
+                requestPermissions(new String[]{PERMISSION_LOCATION, PERMISSION_CAMERA, PERMISSION_STORAGE, PERMISSION_READ_STORAGE}, PERMISSIONS_REQUEST);
             } else {
-                requestPermissions(new String[]{PERMISSION_LOCATION, PERMISSION_CAMERA, PERMISSION_STORAGE, PERMISSION_READSTORAGE}, PERMISSIONS_REQUEST);
+                requestPermissions(new String[]{PERMISSION_LOCATION, PERMISSION_CAMERA, PERMISSION_STORAGE, PERMISSION_READ_STORAGE}, PERMISSIONS_REQUEST);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -254,21 +242,16 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
                 AlertDialog.Builder dialog = new AlertDialog.Builder(this);
                 dialog.setTitle(R.string.permissions_required_title);
                 dialog.setMessage(R.string.permissions_required);
-                dialog.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        Uri uri = Uri.fromParts("package", getPackageName(), null);
-                        intent.setData(uri);
-                        startActivity(intent);
-                    }
+                dialog.setPositiveButton("Ok", (dialogInterface, i) -> {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
                 });
                 dialog.setCancelable(false);
                 dialog.show();
             } else {
-                surfaceView = findViewById(R.id.previewView);
-                surfaceView.getHolder().addCallback(this);
-
+                init();
             }
         }
     }

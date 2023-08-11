@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- res/layout/item_image.xml -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="150dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <ImageView
@@ -12,4 +13,20 @@
         android:scaleType="centerCrop"
         android:layout_margin="2dp"/>
 
-</LinearLayout>
+    <androidx.cardview.widget.CardView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/removeBtn"
+        android:layout_margin="4dp"
+        app:cardCornerRadius="360dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="4dp"
+            android:src="@drawable/close_ic"
+            android:contentDescription="@string/cnt"/>
+
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>

@@ -1,6 +1,8 @@
-package com.swiftant.docs.captureDocsPkg;
+package com.swiftant.docs.gallery.adatper;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,17 +10,19 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.swiftant.docs.R;
+import com.swiftant.docs.fullscreenimgPkg.FullScreenImageView;
 
 import java.io.File;
 import java.util.List;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
-    private List<File> imageFiles;
-    private Context context;
-
+    private final List<File> imageFiles;
+    Activity context;
+    public static File selectedFile;
 
     public ImageAdapter(List<File> imageFiles) {
         this.imageFiles = imageFiles;
@@ -27,7 +31,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
     @NonNull
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        context = parent.getContext();
+        Context context = parent.getContext();
+        this.context = (Activity) context;
         View view = LayoutInflater.from(context).inflate(R.layout.item_image, parent, false);
         return new ImageViewHolder(view);
     }
@@ -39,7 +44,19 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         // For simplicity, we'll use the BitmapFactory here
         holder.imageView.setImageBitmap(BitmapFactory.decodeFile(imageFile.getAbsolutePath()));
 
+        holder.removeBtn.setOnClickListener(onClickRemove -> {
+            if(imageFiles.get(position).delete()) {
+                imageFiles.remove(position);
+            }
+            if(imageFiles.size() == 0){
+                context.finish();
+            }
+            this.notifyItemChanged(position);
+        });
 
+//        holder.imageView.setOnClickListener(onClickImage -> {
+//            context.startActivity(new Intent(context, FullScreenImageView.class));
+//        });
     }
 
     @Override
@@ -47,12 +64,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         return imageFiles.size();
     }
 
-    public class ImageViewHolder extends RecyclerView.ViewHolder {
+    public static class ImageViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
+        CardView removeBtn;
 
         public ImageViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageThumbnail);
+            removeBtn = itemView.findViewById(R.id.removeBtn);
         }
     }
 }
