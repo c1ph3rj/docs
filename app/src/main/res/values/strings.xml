@@ -6,7 +6,7 @@
     <string name="preview_area">preview-area</string>
     <string name="admin">Your Request has some technical issues. An incident is created and escalated to Technical support team. You will be contacted soon for issue resolution.</string>
     <string name="capture">capture</string>
-    <string name="noNetwork">Please check your network connection</string>
+    <string name="noNetwork">Please check your network connection!</string>
     <string name="permissions_required">Please grant the necessary permissions to continue using the app. You can grant the permissions by going to the app settings and enabling the required permissions.</string>
     <string name="permissions_required_title">Permissions Required!</string>
     <string name="cnt">cnt</string>

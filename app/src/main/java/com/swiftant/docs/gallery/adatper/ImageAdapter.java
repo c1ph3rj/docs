@@ -1,9 +1,12 @@
 package com.swiftant.docs.gallery.adatper;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +40,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         return new ImageViewHolder(view);
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         File imageFile = imageFiles.get(position);
@@ -51,7 +55,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             if(imageFiles.size() == 0){
                 context.finish();
             }
-            this.notifyItemChanged(position);
+            this.notifyDataSetChanged();
         });
 
 //        holder.imageView.setOnClickListener(onClickImage -> {

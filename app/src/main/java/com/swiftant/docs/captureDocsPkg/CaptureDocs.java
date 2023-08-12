@@ -3,6 +3,7 @@ package com.swiftant.docs.captureDocsPkg;
 import static android.content.ContentValues.TAG;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -30,6 +31,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
+import com.swiftant.docs.Alert;
 import com.swiftant.docs.gallery.GalleryActivity;
 import com.swiftant.docs.R;
 
@@ -51,9 +53,12 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
     CardView captureImgBtn;
     TextView imageCountView;
     File FILE_SAVE_LOCATION;
+    ImageView flashBtn;
+    boolean isFlashOn;
     FrameLayout imagePreviewLayout;
     ImageView imagePreviewView;
     private long mLastClickTime;
+    Alert alert;
 
 
     @Override
@@ -81,6 +86,9 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
                 imagePreviewLayout = findViewById(R.id.capturedImageLayout);
                 imagePreviewView = findViewById(R.id.capturedImageView);
                 SurfaceView surfaceView = findViewById(R.id.previewView);
+                flashBtn = findViewById(R.id.flashBtn);
+                isFlashOn = false;
+                alert = new Alert(this);
 
                 checkImagePreviewLayoutVisibility();
                 imagePreviewLayout.setVisibility(View.GONE);
@@ -96,6 +104,8 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
                     runOnUiThread(this::captureImage);
                 });
 
+                flashBtn.setOnClickListener(v -> toggleFlash());
+
                 imagePreviewLayout.setOnClickListener(OnClickImagePreview -> startActivity(new Intent(this, GalleryActivity.class)));
             } else {
                 requestPermission();
@@ -104,6 +114,40 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        alert.withTitleAndMessage("Alert", "Do you want to exit?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finishAffinity();
+                    }
+                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
+    }
+
+    private void toggleFlash() {
+        if (camera != null) {
+            Camera.Parameters params = camera.getParameters();
+            if (isFlashOn) {
+                params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                camera.setParameters(params);
+                isFlashOn = false;
+                flashBtn.setImageResource(R.drawable.flash_off_ic); // Change to your off icon
+            } else {
+                params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                camera.setParameters(params);
+                isFlashOn = true;
+                flashBtn.setImageResource(R.drawable.flash_on_ic); // Change to your on icon
+            }
+        }
+    }
+
 
 
     private void captureImage() {
