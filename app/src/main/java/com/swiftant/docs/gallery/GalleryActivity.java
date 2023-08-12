@@ -57,6 +57,7 @@ public class GalleryActivity extends AppCompatActivity {
     File FILE_SAVE_LOCATION;
     Alert alert;
     Dialog loader;
+    boolean isCompanyDetected;
     ActionLogs actionLogs;
 
     @Override
@@ -155,20 +156,26 @@ public class GalleryActivity extends AppCompatActivity {
                                     for (int i = 0; i < parsedResultsObj.length(); i++) {
                                         JSONObject parsedResult = parsedResultsObj.getJSONObject(i);
                                         JSONArray Lines = parsedResult.getJSONObject("TextOverlay").getJSONArray("Lines");
+                                        if(isCompanyDetected){
+                                            break;
+                                        }
                                         for (int j = 0; j < Lines.length(); j++) {
                                             JSONObject eachLine = Lines.getJSONObject(j);
                                             if (eachLine.getString("LineText").toLowerCase(Locale.ROOT).contains("cic")) {
                                                 cicInsuranceDetails(Lines);
-                                            }
-                                            else {
-                                                Toast.makeText(this, "Please Scan a valid Image!", Toast.LENGTH_SHORT).show();
+                                                break;
                                             }
 //                                            else if(eachLine.getString("LineText").toLowerCase(Locale.ROOT).contains("pacis")){
 //                                                KenIndianInsuranceDetails(Lines);
 //                                            }
                                         }
                                     }
-                                    loader.dismiss();
+                                    runOnUiThread(()->{
+                                        if(!isCompanyDetected){
+                                            Toast.makeText(this, "Please Scan a valid Certificate!", Toast.LENGTH_SHORT).show();
+                                        }
+                                        loader.dismiss();
+                                    });
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
