@@ -162,6 +162,7 @@ public class GalleryActivity extends AppCompatActivity {
                                         for (int j = 0; j < Lines.length(); j++) {
                                             JSONObject eachLine = Lines.getJSONObject(j);
                                             if (eachLine.getString("LineText").toLowerCase(Locale.ROOT).contains("cic")) {
+                                                isCompanyDetected =true;
                                                 cicInsuranceDetails(Lines);
                                                 break;
                                             }

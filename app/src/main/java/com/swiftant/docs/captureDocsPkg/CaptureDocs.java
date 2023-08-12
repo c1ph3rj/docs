@@ -106,7 +106,10 @@ public class CaptureDocs extends AppCompatActivity implements SurfaceHolder.Call
 
                 flashBtn.setOnClickListener(v -> toggleFlash());
 
-                imagePreviewLayout.setOnClickListener(OnClickImagePreview -> startActivity(new Intent(this, GalleryActivity.class)));
+                imagePreviewLayout.setOnClickListener(OnClickImagePreview -> {
+                    toggleFlash();
+                    startActivity(new Intent(this, GalleryActivity.class));
+                });
             } else {
                 requestPermission();
             }
